@@ -26,7 +26,7 @@
 
 -(instancetype)initWithStyle:(NJNavigationBarStyle)style color:(UIColor *)color{
     self = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"viewController"];
-    
+    self.edgesForExtendedLayout = UIRectEdgeAll;
     self.navigationItem.nj_barStyle = style;
     self.navigationItem.nj_barColor = color;
     return self;

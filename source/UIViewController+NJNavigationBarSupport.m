@@ -46,9 +46,10 @@ static inline void nj_exchangeViewControllerImp(SEL old, SEL new) {
 }
 
 -(void)nj_viewWillAppear:(BOOL)animated{
+    [self nj_setupBarIfNeed];
     [self nj_viewWillAppear:animated];
     [self nj_retreivePopDelegate];
-    if ([self nj_checkIsNaviCustomized]) {
+    if ([self nj_checkIsDefault]) {
         [self nj_alongsideTrasition:^{
             self.nj_standardBar.backgroundView.backgroundColor = self.navigationItem.nj_barColor ?: self.nj_standardBar.preferredBarColor;
         }];
@@ -68,7 +69,7 @@ static inline void nj_exchangeViewControllerImp(SEL old, SEL new) {
             if (fromDefaultStyle) {
                 [self.navigationController setNavigationBarHidden:NO animated:YES];
             }
-        } else {
+        } else if (self.nj_nextItemOnPush) {
             BOOL toDefaultStyle = self.nj_nextItemOnPush.nj_barStyle == NJNavigationBarStyleDefault;
             if (toDefaultStyle) {
                 [self.navigationController setNavigationBarHidden:NO animated:YES];
@@ -80,7 +81,8 @@ static inline void nj_exchangeViewControllerImp(SEL old, SEL new) {
 -(void)nj_viewDidLayoutSubviews{
     [self nj_viewDidLayoutSubviews];
     NJNavigationBar *bar = objc_getAssociatedObject(self, NJNavigationBarKey);
-    bar.frame = CGRectMake(0, UIApplication.sharedApplication.statusBarFrame.size.height, self.view.frame.size.width, 44);
+    CGFloat nativeHeight = self.navigationController.navigationBar.frame.size.height;
+    bar.frame = CGRectMake(0, UIApplication.sharedApplication.statusBarFrame.size.height, self.view.frame.size.width, nativeHeight);
     [self.view bringSubviewToFront:bar];
 }
 
@@ -106,17 +108,17 @@ static inline void nj_exchangeViewControllerImp(SEL old, SEL new) {
         bar.backgroundView.backgroundColor = self.navigationItem.nj_barColor ?: self.nj_standardBar.preferredBarColor;
         bar.delegate = self;
         bar.frame = CGRectMake(0, UIApplication.sharedApplication.statusBarFrame.size.height, self.view.frame.size.width, 44);
+        [self.view addSubview:bar];
         if (self.nj_previousItemOnPush) {
             UINavigationItem *item = [UINavigationItem new];
             item.title = self.nj_previousItemOnPush.title;
+            item.backBarButtonItem = self.nj_previousItemOnPush.backBarButtonItem;
             [bar pushNavigationItem:item animated:NO];
         }
         UINavigationItem *foregroundItem = [UINavigationItem new];
-        foregroundItem.leftBarButtonItem = self.navigationItem.leftBarButtonItem;
-        foregroundItem.title = self.navigationItem.title ?: self.title;
-        foregroundItem.rightBarButtonItem = self.navigationItem.rightBarButtonItem;
+        self.navigationItem.nj_bind = foregroundItem;
         [bar pushNavigationItem:foregroundItem animated:NO];
-        [self.view addSubview:bar];
+        
         objc_setAssociatedObject(self, NJNavigationBarKey, bar, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
 }
@@ -151,7 +153,10 @@ static inline void nj_exchangeViewControllerImp(SEL old, SEL new) {
 }
 
 -(NJNavigationBar *)nj_standardBar{
-    return (NJNavigationBar *)self.navigationController.navigationBar;
+    if ([self.navigationController.navigationBar isKindOfClass:[NJNavigationBar class]]) {
+        return (NJNavigationBar *)self.navigationController.navigationBar;
+    }
+    return nil;
 }
 
 -(BOOL)nj_barColorIsEqual{
@@ -178,8 +183,9 @@ static inline void nj_exchangeViewControllerImp(SEL old, SEL new) {
     return nil;
 }
 
--(BOOL)nj_checkIsNaviCustomized{
-    return self.navigationItem.nj_barStyle == NJNavigationBarStyleDefault && [self.navigationController.navigationBar isKindOfClass:[NJNavigationBar class]];
+-(BOOL)nj_checkIsDefault{
+    return self.navigationItem.nj_barStyle == NJNavigationBarStyleDefault;
 }
 
 @end
+

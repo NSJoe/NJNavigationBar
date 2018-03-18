@@ -15,7 +15,13 @@ typedef NS_ENUM(NSInteger, NJNavigationBarStyle) {
 
 @interface UINavigationItem (NJNavigationBarSupport)
 
-@property (nonatomic) UIColor *nj_barColor;
+/*
+ @attentions: 以下2个方法 必须在 vc 调用 [super viewDidLoad] 之前调用，且对vc 设置right，left barButtonItem需要在 [super viewDidLoad] 之后
+ */
+@property (nonatomic) UIColor *nj_barColor;// default is nil, use bar's backgroundColor instead when nil
 @property (nonatomic) NJNavigationBarStyle nj_barStyle;
 
+@property (nonatomic) UINavigationItem *nj_bind;
+
 @end
+
